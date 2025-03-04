@@ -1,0 +1,60 @@
+ALTER TABLE data_mart.weekly_sales
+  ALTER COLUMN "week_date" TYPE VARCHAR(10);
+
+UPDATE data_mart.weekly_sales
+SET "week_date" = TO_CHAR(TO_DATE("week_date", 'DD/MM/YY'), 'YYYY-MM-DD');
+
+ALTER TABLE data_mart.weekly_sales
+  ALTER COLUMN "week_date" TYPE DATE USING TO_DATE("week_date", 'YYYY-MM-DD');
+  
+ALTER TABLE data_mart.weekly_sales
+ADD COLUMN "week_number" INTEGER;
+
+UPDATE data_mart.weekly_sales
+SET "week_number" = EXTRACT(WEEK FROM "week_date")::INTEGER;
+
+ALTER TABLE data_mart.weekly_sales
+ADD COLUMN "month_number" INTEGER;
+
+UPDATE data_mart.weekly_sales
+SET "month_number" = EXTRACT(MONTH FROM "week_date")::INTEGER;
+
+ALTER TABLE data_mart.weekly_sales
+ADD COLUMN "calendar_year" INTEGER;
+
+UPDATE data_mart.weekly_sales
+SET "calendar_year" = EXTRACT(YEAR FROM "week_date")::INTEGER;
+
+ALTER TABLE data_mart.weekly_sales
+ADD COLUMN "age_band" TEXT;
+
+UPDATE data_mart.weekly_sales
+SET "age_band" = CASE WHEN segment LIKE '%1' THEN 'Young Adults'
+WHEN segment LIKE '%2' THEN 'Middle Aged'
+WHEN segment LIKE '%3' OR segment LIKE '%4' THEN 'Retirees' END;
+
+ALTER TABLE data_mart.weekly_sales
+ADD COLUMN "demographic" TEXT;
+
+UPDATE data_mart.weekly_sales
+SET "demographic" = CASE WHEN segment LIKE 'C%' THEN 'Couples'
+WHEN segment LIKE 'F%' THEN 'Families' END;
+
+UPDATE data_mart.weekly_sales
+SET "segment" = NULL
+WHERE "segment" = 'null';
+
+ALTER TABLE data_mart.weekly_sales
+ADD COLUMN "avg_transaction" NUMERIC(10, 2);
+
+UPDATE data_mart.weekly_sales
+SET "avg_transaction" = ROUND("sales"::NUMERIC / NULLIF("transactions", 0), 2);
+
+CREATE TABLE data_mart.weekly_sales_new AS
+SELECT week_date, week_number, month_number, calendar_year, region, platform, segment, age_band, demographic, customer_type, transactions, sales, avg_transaction
+FROM data_mart.weekly_sales;
+
+DROP TABLE data_mart.weekly_sales;
+
+ALTER TABLE data_mart.weekly_sales_new
+RENAME TO weekly_sales;
