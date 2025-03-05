@@ -1,0 +1,34 @@
+--1. What is the total sales for the 4 weeks before and after 2020-06-15? What is the growth or reduction rate in actual values and percentage of sales?
+
+WITH b_a4 AS (SELECT SUM(CASE WHEN week_date BETWEEN ('2020-06-14'::DATE - INTERVAL '4 weeks') AND '2020-06-14' THEN sales ELSE 0 END) as sales_before,
+       SUM(CASE WHEN week_date BETWEEN '2020-06-15' AND ('2020-06-15'::DATE + INTERVAL '4 weeks') THEN sales ELSE 0 END) as sales_after
+FROM weekly_sales)
+
+SELECT sales_after - sales_before AS growth_value, ROUND(((sales_after - sales_before) * 100.0 / sales_before), 2) AS growth_perc
+FROM b_a4;
+
+--2. What about the entire 12 weeks before and after?
+
+
+WITH b_a12 AS (SELECT SUM(CASE WHEN week_date BETWEEN ('2020-06-14'::DATE - INTERVAL '12 weeks') AND '2020-06-14' THEN sales ELSE 0 END) as sales_before,
+       SUM(CASE WHEN week_date BETWEEN '2020-06-15' AND ('2020-06-15'::DATE + INTERVAL '12 weeks') THEN sales ELSE 0 END) as sales_after
+FROM weekly_sales)
+
+SELECT sales_after - sales_before AS growth_value, ROUND(((sales_after - sales_before) * 100.0 / sales_before), 2) AS growth_perc
+FROM b_a12;
+
+--3. How do the sale metrics for these 2 periods before and after compare with the previous years in 2018 and 2019?
+
+WITH b_a2018 AS (SELECT SUM(CASE WHEN week_date BETWEEN ('2020-06-14'::DATE - INTERVAL '4 weeks') AND '2020-06-14' THEN sales ELSE 0 END) as sales_before,
+       SUM(CASE WHEN week_date BETWEEN ('2018-06-14'::DATE - INTERVAL '4 weeks') AND '2018-06-14' THEN sales ELSE 0 END) as sales_after
+FROM weekly_sales)
+
+SELECT sales_after - sales_before AS growth_value, ROUND(((sales_after - sales_before) * 100.0 / sales_before), 2) AS growth_perc
+FROM b_a2018;
+
+WITH b_a12 AS (SELECT SUM(CASE WHEN week_date BETWEEN ('2020-06-14'::DATE - INTERVAL '12 weeks') AND '2020-06-14' THEN sales ELSE 0 END) as sales_before,
+       SUM(CASE WHEN week_date BETWEEN '2018-06-15' AND ('2018-06-15'::DATE + INTERVAL '12 weeks') THEN sales ELSE 0 END) as sales_after
+FROM weekly_sales)
+
+SELECT sales_after - sales_before AS growth_value12, ROUND(((sales_after - sales_before) * 100.0 / sales_before), 2) AS growth_perc12
+FROM b_a12;
