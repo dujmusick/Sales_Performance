@@ -78,7 +78,7 @@ LIMIT 1;
 
 --9. Can we use the avg_transaction column to find the average transaction size for each year for Retail vs Shopify? If not - how would you calculate it instead?
 
-SELECT calendar_year, platform, ROUND(SUM(avg_transaction) / COUNT(avg_transaction), 2)
+SELECT calendar_year, platform, ROUND(AVG(avg_transaction), 2)
 FROM weekly_sales
 GROUP BY 1,2
   ORDER BY 1;
