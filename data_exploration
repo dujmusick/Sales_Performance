@@ -1,0 +1,84 @@
+--1. What day of the week is used for each week_date value?
+
+WITH tablee AS (SELECT "week_date", TO_CHAR("week_date", 'Day') AS "day_of_week"
+FROM data_mart.weekly_sales)
+
+SELECT DISTINCT day_of_week
+FROM tablee;
+
+--2. What range of week numbers are missing from the dataset?
+
+WITH week_range AS (SELECT MIN(week_number) AS min_week, MAX(week_number) AS max_week
+  FROM weekly_sales),
+
+generated_weeks AS (SELECT * FROM generate_series(
+    (SELECT min_week FROM week_range),
+    (SELECT max_week FROM week_range), 1) AS week_number)
+
+SELECT week_number
+FROM generated_weeks
+WHERE week_number NOT IN (SELECT DISTINCT "week_number" FROM weekly_sales)
+ORDER BY week_number; 
+
+--3. How many total transactions were there for each year in the dataset?
+
+SELECT calendar_year, SUM(transactions)
+FROM weekly_sales
+GROUP BY calendar_year
+ORDER BY calendar_year;
+
+--4. What is the total sales for each region for each month?
+
+SELECT region, month_number, SUM(sales)
+FROM weekly_sales
+GROUP BY 1,2
+ORDER BY 1,2;
+
+--5. What is the total count of transactions for each platform?
+
+SELECT platform, COUNT(transactions)
+FROM weekly_sales
+GROUP BY 1;
+
+--6. What is the percentage of sales for Retail vs Shopify for each month?
+
+SELECT month_number, 
+    ROUND((SUM(CASE WHEN platform = 'Retail' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS retail_perc, 
+    ROUND((SUM(CASE WHEN platform = 'Shopify' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS shopify_perc
+FROM weekly_sales
+GROUP BY month_number
+ORDER BY month_number;
+
+--7. What is the percentage of sales by demographic for each year in the dataset?
+
+SELECT calendar_year, 
+    ROUND((SUM(CASE WHEN demographic = 'Couples' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS couples_perc, 
+    ROUND((SUM(CASE WHEN demographic = 'Families' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS families_perc
+FROM weekly_sales
+GROUP BY calendar_year
+ORDER BY calendar_year;
+
+--8. Which age_band and demographic values contribute the most to Retail sales?
+
+SELECT ROUND((SUM(CASE WHEN age_band = 'Young Adults' AND platform = 'Retail' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS Young_Adults_perc, 
+    ROUND((SUM(CASE WHEN age_band = 'Middle Aged' AND platform = 'Retail' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS Middle_Aged_perc,
+    ROUND((SUM(CASE WHEN age_band = 'Retirees' AND platform = 'Retail' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS Retirees_perc
+FROM weekly_sales;
+
+SELECT ROUND((SUM(CASE WHEN demographic = 'Couples' AND platform = 'Retail' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS couples_perc, 
+    ROUND((SUM(CASE WHEN demographic = 'Families' AND platform = 'Retail' THEN sales ELSE 0 END) * 100.0) / SUM(sales), 2) AS families_perc
+FROM weekly_sales;
+
+SELECT segment, SUM(sales)
+FROM weekly_sales
+WHERE platform = 'Retail' AND segment IS NOT NULL
+GROUP BY 1
+ORDER BY 2 DESC
+LIMIT 1;
+
+--9. Can we use the avg_transaction column to find the average transaction size for each year for Retail vs Shopify? If not - how would you calculate it instead?
+
+SELECT calendar_year, platform, ROUND(SUM(avg_transaction) / COUNT(avg_transaction), 2)
+FROM weekly_sales
+GROUP BY 1,2
+  ORDER BY 1;
